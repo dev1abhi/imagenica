@@ -1,0 +1,51 @@
+{
+  "name": "imagenica",
+  "displayName": "imagenica",
+  "description": "Search Images or generate images to use in your projects thru vscode.",
+  "version": "1.0.0",
+  "publisher": "dev1abhi",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dev1abhi/imagenica.git"
+  },
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "imagenica.searchImages",
+        "title": "Search Images (Unsplash)"
+      },
+      {
+        "command": "imagenica.generateImage",
+        "title": "Generate Image"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.7",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.92.0",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.4.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "axios": "^1.7.4",
+    "dotenv": "^16.4.5",
+    "path": "^0.12.7"
+  }
+}
