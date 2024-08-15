@@ -1,3 +1,9 @@
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/f9fb85d3-f1b7-4a35-bc8f-3bf6a7e24277" alt="Project Logo" width="200"/>
+</div>
+
+
 # Imagenica
 
 Welcome to the **imagenica** extension for Visual Studio Code! This extension allows you to generate and view images based on prompts you provide, using an external API.
