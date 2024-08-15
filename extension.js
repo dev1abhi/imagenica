@@ -255,6 +255,7 @@ function getErrorContent() {
     <body>
         <h1>Something went wrong!</h1>
         <p>Please try again later.</p>
+        <p>Check your network connection.</p>
     </body>
     </html>`;
 }
