@@ -5,7 +5,6 @@ const vscode = require('vscode');
 const axios = require('axios');
 
 require('dotenv').config(); 
-console.log(process.env.RAPIDAPI_KEY);
 
 function activate(context) {
     // Command to search images
@@ -124,42 +123,6 @@ async function generateImage(prompt) {
         return null;
     }
 }
-
-// function getLoadingContent() {
-//     return `<!DOCTYPE html>
-//     <html lang="en">
-//     <head>
-//         <meta charset="UTF-8">
-//         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//         <title>Generating Image</title>
-//         <style>
-//             body {
-//                 display: flex;
-//                 justify-content: center;
-//                 align-items: center;
-//                 height: 100vh;
-//                 margin: 0;
-//                 background-color: #030403;
-//             }
-//             .loader {
-//                 border: 8px solid #f3f3f3;
-//                 border-radius: 50%;
-//                 border-top: 8px solid #3498db;
-//                 width: 50px;
-//                 height: 50px;
-//                 animation: spin 1s linear infinite;
-//             }
-//             @keyframes spin {
-//                 0% { transform: rotate(0deg); }
-//                 100% { transform: rotate(360deg); }
-//             }
-//         </style>
-//     </head>
-//     <body>
-//         <div class="loader"></div>
-//     </body>
-//     </html>`;
-// }
 
 
 function getLoadingContent(message) {
