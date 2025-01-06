@@ -56,20 +56,20 @@ function activate(context) {
                 panel.webview.html = getLoadingContent('Generating your images...');
 
                 try {
-                    const imageUrl = await generateImage(prompt);
-                    if (imageUrl) {
-                        panel.webview.html = getWebviewContent([imageUrl],'Generating two more images...');
+                    const imageData = await generateImage(prompt);
+                    if (imageData) {
+                        panel.webview.html = getWebviewContent([imageData], 'Generation Done!');
 
 						 // Generate two more images with the same prompt
-						 const imageUrl2 = await generateImage(prompt);
-						 const imageUrl3 = await generateImage(prompt);
+						//  const imageUrl2 = await generateImage(prompt);
+						//  const imageUrl3 = await generateImage(prompt);
  
-						 if (imageUrl2 && imageUrl3) {
-							 // Append the new images to the webview
-							 panel.webview.html = getWebviewContent([imageUrl, imageUrl2, imageUrl3]);
-						 } else {
-							 vscode.window.showInformationMessage('Failed to generate additional images.');
-						 }
+						//  if (imageUrl2 && imageUrl3) {
+						// 	 // Append the new images to the webview
+						// 	 panel.webview.html = getWebviewContent([imageUrl, imageUrl2, imageUrl3]);
+						//  } else {
+						// 	 vscode.window.showInformationMessage('Failed to generate additional images.');
+						//  }
 
                     } else {
                         vscode.window.showInformationMessage('Image generation failed.');
@@ -86,7 +86,7 @@ function activate(context) {
 }
 
 async function searchImages(query) {
-    const apiKey = 'UNSPLASH_API_KEY'; 
+    const apiKey = process.env.UNSPLASH_API_KEY; 
     const response = await axios.get(`https://api.unsplash.com/search/photos`, {
         params: {
             query: query,
@@ -100,28 +100,38 @@ async function searchImages(query) {
     return response.data.results.map(image => image.urls.regular);
 }
 
+
 async function generateImage(prompt) {
-	console.log(process.env.RAPIDAPI_KEY);
     const options = {
         method: 'POST',
-        url: 'https://animimagine-ai.p.rapidapi.com/generateImage',
+        url: 'https://ai-image-generator10.p.rapidapi.com/image_gen_v2',
         headers: {
-            'x-rapidapi-key': 'RAPIDAPI_KEY',
-            'x-rapidapi-host': 'animimagine-ai.p.rapidapi.com',
-            'Content-Type': 'application/json'
+          'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+          'x-rapidapi-host': process.env.RAPIDAPI_HOST,
+          'Content-Type': 'application/json'
         },
         data: {
-            prompt: prompt
+          query: prompt
         }
-    };
+      };
 
-    try {
+      try {
         const response = await axios.request(options);
-        return response.data.imageUrl;
+
+        // Assuming `response.data.imageData` contains the base64 image string
+        const imageData = response.data.imageData;
+
+        if (imageData.startsWith('data:image/')) {
+            return imageData; // Already formatted correctly
+        } else {
+            // Fallback: Wrap it with the appropriate data URI prefix
+            return `data:image/jpeg;base64,${imageData}`;
+        }
     } catch (error) {
-        console.error(error);
+        console.error('Error during image generation:', error);
         return null;
     }
+
 }
 
 
