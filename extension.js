@@ -6,6 +6,7 @@ const axios = require('axios');
 
 require('dotenv').config(); 
 
+//this calls searchImages and generateImage functions
 function activate(context) {
     // Command to search images
     context.subscriptions.push(
@@ -28,6 +29,30 @@ function activate(context) {
                     );
 
                     panel.webview.html = getWebviewContent(images);
+
+                    panel.webview.onDidReceiveMessage(async (message) => {
+                        if (message.command === 'downloadImage') {
+                            const workspaceFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0] && vscode.workspace.workspaceFolders[0].uri.fsPath;
+                            if (!workspaceFolder) {
+                                vscode.window.showErrorMessage('No workspace folder found.');
+                                return;
+                            }
+
+                            try {
+                                const response = await axios.get(message.imageUrl, { responseType: 'arraybuffer' });
+                                //unique file name with a .jpg extension
+                                const timestamp = Date.now(); //timestamp for uniqueness
+                                const fileName = `image_${timestamp}.jpg`;
+                                const filePath = path.join(workspaceFolder, fileName);
+                                require('fs').writeFileSync(filePath, response.data);
+
+                                vscode.window.showInformationMessage(`Image downloaded as ${fileName}`);
+                            } catch (error) {
+                                vscode.window.showErrorMessage('Error downloading the image.');
+                                console.error(error);
+                            }
+                        }
+                    });
                 } else {
                     vscode.window.showInformationMessage('No images found.');
                 }
@@ -35,7 +60,7 @@ function activate(context) {
         })
     );
 
-    // Command to generate images
+    // generate images
     context.subscriptions.push(
         vscode.commands.registerCommand('imagenica.generateImage', async () => {
             const prompt = await vscode.window.showInputBox({
@@ -60,16 +85,29 @@ function activate(context) {
                     if (imageData) {
                         panel.webview.html = getWebviewContent([imageData], 'Generation Done!');
 
-						 // Generate two more images with the same prompt
-						//  const imageUrl2 = await generateImage(prompt);
-						//  const imageUrl3 = await generateImage(prompt);
- 
-						//  if (imageUrl2 && imageUrl3) {
-						// 	 // Append the new images to the webview
-						// 	 panel.webview.html = getWebviewContent([imageUrl, imageUrl2, imageUrl3]);
-						//  } else {
-						// 	 vscode.window.showInformationMessage('Failed to generate additional images.');
-						//  }
+						 // Handle messages from the webview
+                         panel.webview.onDidReceiveMessage(async (message) => {
+                            if (message.command === 'downloadImage') {
+                                const workspaceFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0] && vscode.workspace.workspaceFolders[0].uri.fsPath;
+                                if (!workspaceFolder) {
+                                    vscode.window.showErrorMessage('No workspace folder found.');
+                                    return;
+                                }
+    
+                                try {
+                                    const response = await axios.get(message.imageUrl, { responseType: 'arraybuffer' });
+                                    const timestamp = Date.now(); // timestamp for uniqueness
+                                    const fileName = `image_${timestamp}.jpg`;
+                                    const filePath = path.join(workspaceFolder, fileName);
+                                    require('fs').writeFileSync(filePath, response.data);
+    
+                                    vscode.window.showInformationMessage(`Image downloaded as ${fileName}`);
+                                } catch (error) {
+                                    vscode.window.showErrorMessage('Error downloading the image.');
+                                    console.error(error);
+                                }
+                            }
+                        });
 
                     } else {
                         vscode.window.showInformationMessage('Image generation failed.');
@@ -118,11 +156,11 @@ async function generateImage(prompt) {
       try {
         const response = await axios.request(options);
 
-        // Assuming `response.data.imageData` contains the base64 image string
+        // `response.data.imageData` contains the base64 image string
         const imageData = response.data.imageData;
 
         if (imageData.startsWith('data:image/')) {
-            return imageData; // Already formatted correctly
+            return imageData; 
         } else {
             // Fallback: Wrap it with the appropriate data URI prefix
             return `data:image/jpeg;base64,${imageData}`;
@@ -234,8 +272,16 @@ function getErrorContent() {
 }
 
 function getWebviewContent(imageUrls, additionalMessage) {
-    const imageElements = imageUrls.map(url => `<img src="${url}" alt="Image">`).join('');
-	const message = additionalMessage ? `<p>${additionalMessage}</p>` : '';
+    const imageElements = imageUrls
+        .map(
+            (url, index) => `
+            <div class="image-item">
+                <img src="${url}" alt="Image ${index + 1}">
+                <button class="download-btn" data-url="${url}">Download Image ${index + 1}</button>
+            </div>`
+        )
+        .join('');
+    const message = additionalMessage ? `<p>${additionalMessage}</p>` : '';
 
     return `<!DOCTYPE html>
     <html lang="en">
@@ -243,7 +289,7 @@ function getWebviewContent(imageUrls, additionalMessage) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Image Results</title>
-         <style>
+        <style>
             body {
                 margin: 0;
                 display: flex;
@@ -259,16 +305,29 @@ function getWebviewContent(imageUrls, additionalMessage) {
                 justify-content: center;
                 margin-bottom: 20px;
             }
+            .image-item {
+                margin: 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
             img {
                 max-width: 300px;
                 max-height: 300px;
-                margin: 10px;
                 border: 1px solid #ccc;
             }
-            p {
-                font-size: 16px;
-                color: #333;
-                margin: 0;
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+                margin-top: 10px;
+                cursor: pointer;
+                background-color: #0078d4;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+            button:hover {
+                background-color: #005a9e;
             }
         </style>
     </head>
@@ -277,6 +336,15 @@ function getWebviewContent(imageUrls, additionalMessage) {
             ${imageElements}
         </div>
         <p>${message}</p>
+        <script>
+            const vscode = acquireVsCodeApi();
+            document.querySelectorAll('.download-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const imageUrl = button.getAttribute('data-url');
+                    vscode.postMessage({ command: 'downloadImage', imageUrl });
+                });
+            });
+        </script>
     </body>
     </html>`;
 }
