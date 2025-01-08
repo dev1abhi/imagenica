@@ -6,6 +6,12 @@ const axios = require('axios');
 
 require('dotenv').config(); 
 
+const config = require('./config');
+
+const unsplashKey = Buffer.from(config.UNSPLASH_API_KEY, 'base64').toString('utf-8');
+const rapidApiKey = Buffer.from(config.RAPIDAPI_KEY, 'base64').toString('utf-8');
+const rapidApiHost = Buffer.from(config.RAPIDAPI_HOST, 'base64').toString('utf-8');
+
 //this calls searchImages and generateImage functions
 function activate(context) {
     // Command to search images
@@ -124,14 +130,14 @@ function activate(context) {
 }
 
 async function searchImages(query) {
-    const apiKey = process.env.UNSPLASH_API_KEY; 
+    //const apiKey = process.env.UNSPLASH_API_KEY; 
     const response = await axios.get(`https://api.unsplash.com/search/photos`, {
         params: {
             query: query,
             per_page: 5 // Number of images to retrieve
         },
         headers: {
-            Authorization: `Client-ID ${apiKey}`
+            Authorization: `Client-ID ${unsplashKey}`
         }
     });
 
@@ -144,8 +150,8 @@ async function generateImage(prompt) {
         method: 'POST',
         url: 'https://ai-image-generator10.p.rapidapi.com/image_gen_v2',
         headers: {
-          'x-rapidapi-key': process.env.RAPIDAPI_KEY,
-          'x-rapidapi-host': process.env.RAPIDAPI_HOST,
+          'x-rapidapi-key': rapidApiKey,
+          'x-rapidapi-host': rapidApiHost,
           'Content-Type': 'application/json'
         },
         data: {
