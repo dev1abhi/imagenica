@@ -2,7 +2,7 @@
   "name": "imagenica",
   "displayName": "imagenica",
   "description": "Search Images or generate images to use in your projects thru vscode.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publisher": "dev1abhi",
   "icon": "icon.png",
   "repository": {
